@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Product DApp</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.umd.min.js"></script>
+</head>
+<body>
+
+<h2>Product DApp</h2>
+
+<button onclick="connectWallet()">Connect MetaMask</button>
+<p id="wallet"></p>
+
+<input id="name" placeholder="Назва"><br>
+<input id="description" placeholder="Опис"><br>
+<input id="price" placeholder="Ціна"><br>
+<input id="image" placeholder="URL картинки"><br>
+
+<button onclick="createProduct()">Create</button>
+
+<table border="1">
+  <thead>
+    <tr>
+      <th>Назва</th>
+      <th>Опис</th>
+      <th>Адреса</th>
+      <th>Дата</th>
+      <th>Картинка</th>
+    </tr>
+  </thead>
+  <tbody id="table"></tbody>
+</table>
+
+<script>
+const contract_address = "0x5FbDB215678afecb367f032d9F642f64180aa";
+
+const abi = [
+  "function createProduct(string,string,uint256,string)",
+  "function getProducts() view returns (tuple(string,string,uint,address,uint,string)[])"
+];
+
+let contract;
+let signer;
+
+async function connectWallet() {
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  await provider.send("eth_requestAccounts", []);
+  signer = await provider.getSigner();
+
+  document.getElementById("wallet").innerText = await signer.getAddress();
+
+  contract = new ethers.Contract(contract_address, abi, signer);
+}
+
+async function createProduct() {
+  const name = document.getElementById("name").value;
+  const description = document.getElementById("description").value;
+  const price = document.getElementById("price").value;
+  const image = document.getElementById("image").value;
+
+  const tx = await contract.createProduct(name, description, price, image);
+  await tx.wait();
+
+  loadProducts();
+}
+
+async function loadProducts() {
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  const readContract = new ethers.Contract(contract_address, abi, provider);
+
+  const products = await readContract.getProducts();
+
+  const table = document.getElementById("table");
+  table.innerHTML = "";
+
+  products.forEach(p => {
+    const row = `
+      <tr>
+        <td>${p[0]}</td>
+        <td>${p[1]}</td>
+        <td>${p[3]}</td>
+        <td>${new Date(Number(p[4]) * 1000).toLocaleString()}</td>
+        <td><img src="${p[5]}" width="60"></td>
+      </tr>
+    `;
+    table.innerHTML += row;
+  });
+}
+
+loadProducts();
+</script>
+
+</body>
+</html>
