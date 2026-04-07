@@ -1,16 +1,4 @@
-// const { ethers } = require("hardhat");
-
-// // (
-// //   async () => {
-// //     const factory = await ethers.getContractFactory("Counter");
-// //     const contract = await factory.deploy();
-
-// //     await contract.waitForDeployment();
-
-// //     console.log(`Contract deployed at address: \u001b[32m${await contract.getAddress()}\u001b[0m`);
-// //   }
-// // )()
-
+// homework 9
 // const hre = require("hardhat");
 
 // async function main() {
@@ -27,18 +15,14 @@
 //   process.exitCode = 1;
 // });
 
-const hre = require("hardhat");
-
-async function main() {
-  const ProductManager = await hre.ethers.getContractFactory("ProductManager");
-  const contract = await ProductManager.deploy();
+// homework 10
+const main = async () => {
+  const Contract = await ethers.getContractFactory("PostStorage");
+  const contract = await Contract.deploy();
 
   await contract.waitForDeployment();
 
-  console.log("Contract deployed to:", await contract.getAddress());
-}
+  console.log("ADDRESS:", await contract.getAddress());
+};
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main();
