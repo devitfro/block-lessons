@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Media Store</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+
+  <style>
+    .card {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px;
+      width: 250px;
+    }
+
+    img {
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>Add Image</h2>
+
+<input id="url" placeholder="Image URL">
+<button onclick="addMedia()">Add</button>
+
+<hr>
+
+<div id="media"></div>
+
+<script>
+
+let web3;
+let contract;
+let account;
+
+const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+
+const abi = [
+  {
+    "inputs":[{"internalType":"string","name":"_url","type":"string"}],
+    "name":"addMedia","outputs":[],"stateMutability":"nonpayable","type":"function"
+  },
+  {
+    "inputs":[],"name":"getMedia",
+    "outputs":[{"components":[
+      {"internalType":"uint256","name":"id","type":"uint256"},
+      {"internalType":"string","name":"url","type":"string"},
+      {"internalType":"address","name":"owner","type":"address"},
+      {"internalType":"uint256","name":"createdAt","type":"uint256"},
+      {"internalType":"bool","name":"isDeleted","type":"bool"}
+    ],"internalType":"struct MediaStore.Media[]","name":"","type":"tuple[]"}],
+    "stateMutability":"view","type":"function"
+  },
+  {
+    "inputs":[{"internalType":"uint256","name":"_id","type":"uint256"}],
+    "name":"deleteMedia","outputs":[],"stateMutability":"nonpayable","type":"function"
+  }
+];
+
+async function init() {
+  if (window.ethereum) {
+    web3 = new Web3(window.ethereum);
+    await window.ethereum.request({ method: "eth_requestAccounts" });
+
+    const accounts = await web3.eth.getAccounts();
+    account = accounts[0];
+
+    contract = new web3.eth.Contract(abi, contractAddress);
+
+    loadMedia();
+  }
+}
+
+async function addMedia() {
+  const url = document.getElementById("url").value;
+
+  await contract.methods.addMedia(url)
+    .send({ from: account });
+
+  loadMedia(); // 🔥 обновление после добавления
+}
+
+async function deleteMedia(id) {
+  await contract.methods.deleteMedia(id)
+    .send({ from: account });
+
+  loadMedia(); // 🔥 обновление после удаления
+}
+
+async function loadMedia() {
+  const media = await contract.methods.getMedia().call();
+  render(media);
+}
+
+function render(media) {
+  const container = document.getElementById("media");
+  container.innerHTML = "";
+
+  media.forEach(m => {
+
+    // ❗ пропускаем удаленные
+    if (m.isDeleted) return;
+
+    let html = `
+      <div class="card">
+        <img src="${m.url}">
+        <p>${m.owner}</p>
+        <p>${new Date(m.createdAt * 1000).toLocaleString()}</p>
+    `;
+
+    // кнопка только владельцу
+    if (m.owner.toLowerCase() === account.toLowerCase()) {
+      html += `<button onclick="deleteMedia(${m.id})">Delete</button>`;
+    }
+
+    html += `</div>`;
+
+    container.innerHTML += html;
+  });
+}
+
+init();
+
+</script>
+
+</body>
+</html>

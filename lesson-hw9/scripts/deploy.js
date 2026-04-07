@@ -16,8 +16,20 @@
 // });
 
 // homework 10
+// const main = async () => {
+//   const Contract = await ethers.getContractFactory("PostStorage");
+//   const contract = await Contract.deploy();
+
+//   await contract.waitForDeployment();
+
+//   console.log("ADDRESS:", await contract.getAddress());
+// };
+
+// main();
+
+// homework 11
 const main = async () => {
-  const Contract = await ethers.getContractFactory("PostStorage");
+  const Contract = await ethers.getContractFactory("MediaStore");
   const contract = await Contract.deploy();
 
   await contract.waitForDeployment();
